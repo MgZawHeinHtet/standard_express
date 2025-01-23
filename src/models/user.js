@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import bcrypt from "bcrypt";
 const userSchema = new Schema(
   {
     username: {
@@ -35,11 +36,17 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.plugin(mongooseAggregatePaginate)
+Schema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    this.password = bcrypt.hash(this.password, 10);
+  }
+  next(); 
+});
+
+Schema.methods.isPasswordMatch = async function (password){
+  return await bcrypt.compare(password,this.password)
+}
+
+userSchema.plugin(mongooseAggregatePaginate);
 
 export const User = mongoose.model("User", userSchema);
-
-
-
-
-
