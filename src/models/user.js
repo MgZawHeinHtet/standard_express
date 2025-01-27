@@ -27,6 +27,9 @@ const userSchema = new Schema(
     profile_photo: {
       type: String,
     },
+    cover_photo: {
+      type: String,
+    },
     posts: [
       {
         type: Schema.Types.ObjectId,
@@ -37,18 +40,18 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-Schema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    this.password = bcrypt.hash(this.password, 10);
-  }
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+
   next();
 });
 
-Schema.methods.isPasswordMatch = async function (password) {
+userSchema.methods.isPasswordMatch = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-Schema.methods.generateAccessToken = async function () {
+userSchema.methods.generateAccessToken = async function () {
   jwt.sign(
     {
       _id: this._id,
@@ -60,7 +63,7 @@ Schema.methods.generateAccessToken = async function () {
   );
 };
 
-Schema.methods.generateRefreshToken = async function () {
+userSchema.methods.generateRefreshToken = async function () {
   jwt.sign(
     {
       _id: this._id,
@@ -69,7 +72,5 @@ Schema.methods.generateRefreshToken = async function () {
     { expiresIn: process.env.REFRESH_TOKEN_EXP_TIME }
   );
 };
-
-userSchema.plugin(mongooseAggregatePaginate);
 
 export const User = mongoose.model("User", userSchema);
