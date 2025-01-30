@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerController } from "../controllers/auth.js";
+import { loginController, registerController } from "../controllers/auth.js";
 import { upload } from "../middlewares/multer.js";
 const authRouter = Router();
 
@@ -11,5 +11,7 @@ authRouter.post(
   ]),
   registerController
 );
+
+authRouter.post("/login",loginController)
 
 export default authRouter;

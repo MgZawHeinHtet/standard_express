@@ -30,6 +30,9 @@ const userSchema = new Schema(
     cover_photo: {
       type: String,
     },
+    refresh_token:{
+      type : String
+    },
     posts: [
       {
         type: Schema.Types.ObjectId,
@@ -52,7 +55,7 @@ userSchema.methods.isPasswordMatch = async function (password) {
 };
 
 userSchema.methods.generateAccessToken = async function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
       email: this.email,
@@ -64,7 +67,7 @@ userSchema.methods.generateAccessToken = async function () {
 };
 
 userSchema.methods.generateRefreshToken = async function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
     },
