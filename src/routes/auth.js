@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginController, registerController } from "../controllers/auth.js";
+import { generateNewRefreshToken, loginController, registerController } from "../controllers/auth.js";
 import { upload } from "../middlewares/multer.js";
 const authRouter = Router();
 
@@ -13,5 +13,7 @@ authRouter.post(
 );
 
 authRouter.post("/login",loginController)
+
+authRouter.post("/test",generateNewRefreshToken)
 
 export default authRouter;

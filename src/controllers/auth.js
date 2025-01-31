@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
 import uploadFileToCloudinary from "../utils/cloudinary.js";
 import fs from "fs";
@@ -67,14 +68,9 @@ const genereateAccessTokenAndRefreshRoken = async (userId) => {
       "-password -refreshToken"
     );
 
-    console.log(loggeduser);
-
     const accessToken = await loggeduser.generateAccessToken();
 
     const refreshToken = await loggeduser.generateRefreshToken();
-
-    console.log(refreshToken);
-    
 
     loggeduser.refresh_token = refreshToken;
 
@@ -113,7 +109,7 @@ export const loginController = async (req, res) => {
   );
 
   const options = {
-    httpOnly: true, 
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   };
 
@@ -121,5 +117,45 @@ export const loginController = async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json({data : loggeduser,message : "Login Successfully🎉"})
+    .json({ data: loggeduser, message: "Login Successfully🎉" });
+};
+
+export const generateNewRefreshToken = async (req, res) => {
+  try {
+    const oldRefreshToken =
+      req?.cookies?.refreshToken || req?.body?.refreshToken;
+
+    if (!oldRefreshToken) {
+      return res.status(404).json({ message: "Refresh Token Not Found" });
+    }
+
+    const oldUserId = jwt.verify(
+      oldRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET_KEY
+    )?._id;
+
+    const existingUser = await User.findById(oldUserId);
+
+    if (existingUser && existingUser.refresh_token === oldRefreshToken) {
+      const { accessToken, refreshToken } =
+        await genereateAccessTokenAndRefreshRoken(existingUser._id);
+      existingUser.refresh_token = refreshToken;
+      await existingUser.save();
+      const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      };
+
+      return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json({ newRefreshToken: refreshToken });
+    }
+
+    return res.status(500).json({ message: "Something went wrong" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error });
+  }
 };
