@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { generateNewRefreshToken, loginController, registerController } from "../controllers/auth.js";
+import { generateNewRefreshToken, loginController, logoutController, registerController } from "../controllers/auth.js";
+import { verifyJwt } from "../middlewares/auth.js";
 import { upload } from "../middlewares/multer.js";
 const authRouter = Router();
 
@@ -14,6 +15,8 @@ authRouter.post(
 
 authRouter.post("/login",loginController)
 
-authRouter.post("/test",generateNewRefreshToken)
+authRouter.post("/refreshToken",generateNewRefreshToken)
+
+authRouter.delete("/logout",verifyJwt,logoutController)
 
 export default authRouter;

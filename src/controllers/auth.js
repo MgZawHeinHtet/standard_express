@@ -159,3 +159,29 @@ export const generateNewRefreshToken = async (req, res) => {
     return res.status(500).json({ message: error });
   }
 };
+
+export const logoutController = async (req, res) => {
+  console.log("hit the logout");
+
+  const loggedUser = req?.user;
+  if (!req?.user || !req?.user?._id) {
+    return res.status(401).json({ message: "Unauthorized access 4" });
+  }
+
+  const user = await User.findOneAndUpdate(
+    { username: loggedUser.username },
+    { refresh_token: 1 },
+    { new: true, upsert: true, runValidators: true }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json({ message: "logged out Successfully🎉" });
+};
